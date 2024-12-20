@@ -22,7 +22,26 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <h1>Root Layout</h1>
+        <h1>Root Layout</h1><br/>
+        <section>
+          <nav>
+            <ul>
+              <li>
+                <a href="/dashboard">Dashboard</a>
+              </li>
+              <li>
+                <a href="/dashboard/settings">Settings</a>
+              </li>
+              <li>
+                <a href="/dashboard/settings/test">Settings Test</a>
+              </li>
+              <li>
+              <a className="bg-blue-400 px-4 py-2" href="/about">About</a>
+            </li>
+            </ul>
+          </nav>
+        </section><br/>
+        <p>testing</p>
         {children}
       </body>
     </html>
