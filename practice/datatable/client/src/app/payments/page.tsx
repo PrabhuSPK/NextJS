@@ -5,11 +5,29 @@ async function getData(): Promise<Payment[]> {
   // Fetch data from your API here.
   return [
     {
-      id: "728ed52f",
-      amount: 100,
+      id: "728ed52ef",
+      amount: 10023,
       status: "pending",
       email: "m@example.com",
     },
+    {
+        id: "728ed52wf",
+        amount: 102340,
+        status: "success",
+        email: "a@example.com",
+      },
+      {
+        id: "728edq52f",
+        amount: 1034340,
+        status: "a",
+        email: "b@example.com",
+      },
+      {
+        id: "728eqd52f",
+        amount: 10,
+        status: "b",
+        email: "m@example.com",
+      },
     // ...
   ]
 }
