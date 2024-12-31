@@ -80,7 +80,9 @@ export const columns: ColumnDef<Payment>[] = [
     },
   },
   {
-    id: "actions",
+      id: "actions",
+      header: "Actions",
+    // accessorKey: "status",
     cell: ({ row }) => {
       const payment = row.original
  
