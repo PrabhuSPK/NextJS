@@ -5,7 +5,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -153,6 +152,13 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
       }
 
       setColumns(builtColumns);
+
+      // Set default visibility for all columns
+      const visibilityState = builtColumns.reduce((acc, col) => {
+        acc[col.accessorKey || col.id] = true;
+        return acc;
+      }, {});
+      setColumnVisibility(visibilityState);
     } catch (error) {
       console.error("Error fetching table data:", error);
       setData([]);
@@ -191,9 +197,8 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   const handleResetFilters = () => {
@@ -204,17 +209,34 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
   };
 
   const handleToggleValue = (field, value, checked) => {
-    setSelectedFilters((prev) => {
-      const existing = prev[field] || [];
-      const updated = checked
-        ? [...existing, value]
-        : existing.filter((v) => v !== value);
-      return { ...prev, [field]: updated };
-    });
+    const updatedFilters = { ...selectedFilters };
+
+    if (checked) {
+      updatedFilters[field] = updatedFilters[field]
+        ? [...updatedFilters[field], value]
+        : [value];
+    } else {
+      updatedFilters[field] = updatedFilters[field].filter((v) => v !== value);
+    }
+
+    setSelectedFilters(updatedFilters);
+
+    // Update column filter dynamically
+    const col = table.getColumn(field);
+    if (col) {
+      col.setFilterValue(updatedFilters[field] || []);
+    }
   };
 
   const handleSearchDropdown = (field, text) => {
     setFilterSearch((prev) => ({ ...prev, [field]: text }));
+  };
+
+  // Calculate counts for dropdown dynamically
+  const calculateFilterCounts = (field, value) => {
+    return table
+      .getFilteredRowModel()
+      .rows.filter((row) => String(row.original[field]) === value).length;
   };
 
   if (loading) {
@@ -234,34 +256,6 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
         <Button variant="outline" onClick={handleResetFilters}>
           Reset All Filters
         </Button>
-      </div>
-
-      {/* Column Visibility Dropdown */}
-      <div className="flex items-center mb-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Manage Columns <ChevronDown className="ml-1 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Toggle Column Visibility</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {table.getAllColumns().map((column) => (
-              <DropdownMenuItem
-                key={column.id}
-                className="flex items-center gap-2"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  column.toggleVisibility();
-                }}
-              >
-                <Checkbox checked={column.getIsVisible()} />
-                <span className="capitalize">{column.id}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* Filter Dropdowns */}
@@ -305,17 +299,21 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
                 ) : (
                   displayedValues.map((val) => {
                     const isChecked = selectedValues.includes(val);
+                    const count = calculateFilterCounts(field, val);
                     return (
                       <DropdownMenuItem
                         key={val}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 justify-between"
                         onSelect={(e) => {
                           e.preventDefault();
                           handleToggleValue(field, val, !isChecked);
                         }}
                       >
-                        <Checkbox checked={isChecked} />
-                        <span>{val}</span>
+                        <div className="flex items-center gap-2">
+                          <Checkbox checked={isChecked} />
+                          <span>{val}</span>
+                        </div>
+                        <span className="text-muted-foreground">{count}</span>
                       </DropdownMenuItem>
                     );
                   })
@@ -326,6 +324,8 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
                   onSelect={(e) => {
                     e.preventDefault();
                     setSelectedFilters((prev) => ({ ...prev, [field]: [] }));
+                    const col = table.getColumn(field);
+                    if (col) col.setFilterValue([]);
                   }}
                 >
                   Clear filters
