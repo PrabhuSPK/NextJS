@@ -47,7 +47,8 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
   const [loading, setLoading] = useState(true)
   const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
-  const [columnVisibility, setColumnVisibility] = useState({})
+  const [globalFilter, setGlobalFilter] = useState("") // Global search feature
+  const [columnVisibility, setColumnVisibility] = useState({}) // Track column visibility
   const [rowSelection, setRowSelection] = useState({})
   const [selectedFilters, setSelectedFilters] = useState({})
   const [filterSearch, setFilterSearch] = useState({})
@@ -66,6 +67,7 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
         if (tableData.length > 0) {
           const keys = Object.keys(tableData[0])
 
+          // Add "Select" column for row selection
           builtColumns.push({
             id: "select",
             header: ({ table }) => (
@@ -89,6 +91,7 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
             enableHiding: false,
           })
 
+          // Dynamically create columns based on keys
           keys.forEach((key) => {
             builtColumns.push({
               accessorKey: key,
@@ -118,6 +121,14 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
         }
 
         setColumns(builtColumns)
+
+        // Set default visibility for all columns (visible by default)
+        const visibilityState = builtColumns.reduce((acc, col) => {
+          acc[col.accessorKey || col.id] = true
+          return acc
+        }, {})
+        setColumnVisibility(visibilityState)
+
         setData(tableData)
       } catch (error) {
         console.error("Error fetching table data:", error)
@@ -137,7 +148,8 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
     state: {
       sorting,
       columnFilters,
-      columnVisibility,
+      globalFilter,
+      columnVisibility, // Use column visibility state
       rowSelection,
     },
     filterFns: {
@@ -146,7 +158,8 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
     enableSortingRemoval: false,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnVisibilityChange: setColumnVisibility, // Update column visibility state
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -154,7 +167,6 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
     getFilteredRowModel: getFilteredRowModel(),
   })
 
-  // Apply selected filters to table column filters
   useEffect(() => {
     Object.keys(selectedFilters).forEach((field) => {
       const col = table.getColumn(field)
@@ -180,14 +192,14 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
   const handleResetFilters = () => {
     setSelectedFilters({})
     setFilterSearch({})
-    table.setColumnFilters([]) // Reset column filters in TanStack Table
+    setGlobalFilter("")
+    table.setColumnFilters([])
   }
 
   const handleSearchDropdown = (field, text) => {
     setFilterSearch((prev) => ({ ...prev, [field]: text }))
   }
 
-  // Calculate counts for dropdown dynamically
   const calculateFilterCounts = (field, value) => {
     return table
       .getFilteredRowModel()
@@ -200,12 +212,12 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
 
   return (
     <div className="w-full">
-      {/* Search bar and Reset All Filters button */}
+      {/* Global Search and Reset Filters */}
       <div className="flex items-center gap-4 py-4">
         <Input
-          placeholder={`Search ${searchableField}...`}
-          value={String(table.getColumn(searchableField)?.getFilterValue() || "")}
-          onChange={(e) => table.getColumn(searchableField)?.setFilterValue(e.target.value)}
+          placeholder="Search across all columns..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
         />
         <Button variant="outline" onClick={handleResetFilters}>
@@ -213,7 +225,35 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
         </Button>
       </div>
 
-      {/* Filter dropdowns */}
+      {/* Column Visibility Dropdown */}
+      <div className="flex items-center mb-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Manage Columns <ChevronDown className="ml-1 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel>Toggle Column Visibility</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table.getAllColumns().map((column) => (
+              <DropdownMenuItem
+                key={column.id}
+                className="flex items-center gap-2"
+                onSelect={(e) => {
+                  e.preventDefault()
+                  column.toggleVisibility()
+                }}
+              >
+                <Checkbox checked={column.getIsVisible()} />
+                <span className="capitalize">{column.id}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Filter Dropdowns */}
       <div className="flex flex-wrap gap-2 mb-4">
         {Object.keys(filterOptions).map((field) => {
           const allValues = filterOptions[field] || []
