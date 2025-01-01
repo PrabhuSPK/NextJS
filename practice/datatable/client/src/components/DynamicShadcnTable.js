@@ -232,7 +232,6 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
     setFilterSearch((prev) => ({ ...prev, [field]: text }));
   };
 
-  // Calculate counts for dropdown dynamically
   const calculateFilterCounts = (field, value) => {
     return table
       .getFilteredRowModel()
@@ -256,6 +255,34 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
         <Button variant="outline" onClick={handleResetFilters}>
           Reset All Filters
         </Button>
+      </div>
+
+      {/* Column Visibility Dropdown */}
+      <div className="flex items-center mb-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Manage Columns <ChevronDown className="ml-1 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel>Toggle Column Visibility</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table.getAllColumns().map((column) => (
+              <DropdownMenuItem
+                key={column.id}
+                className="flex items-center gap-2"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  column.toggleVisibility();
+                }}
+              >
+                <Checkbox checked={column.getIsVisible()} />
+                <span className="capitalize">{column.id}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Filter Dropdowns */}
