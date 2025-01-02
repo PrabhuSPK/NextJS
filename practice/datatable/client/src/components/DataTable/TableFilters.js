@@ -15,7 +15,6 @@ import {
 import { ChevronDown } from "lucide-react";
 import { useRouter } from 'next/navigation'
 import DeleteDialog from "@/components/CRUD/Delete";
-import ColumnVisibilityManager from "@/components/DataTable/ColumnVisibilityManager"; // Importing the visibility manager
 
 // Converts snake_case or camelCase to Title Case
 function formatHeader(header) {
@@ -143,8 +142,31 @@ export default function TableFilters({
         {/* Create Button */}
 
         {/* Column Visibility Button */}
-        <ColumnVisibilityManager table={table} /> {/* Using ColumnVisibilityManager component */}
-        <Button onClick={() => router.push("/create-user")}>Create</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Visibility <ChevronDown className="ml-1 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel>Toggle Column Visibility</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table.getAllColumns().map((column) => (
+              <DropdownMenuItem
+                key={column.id}
+                className="flex items-center gap-2"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  column.toggleVisibility();
+                }}
+              >
+                <Checkbox checked={column.getIsVisible()} />
+                <span className="capitalize">{column.id}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
       </div>
     </div>
   );

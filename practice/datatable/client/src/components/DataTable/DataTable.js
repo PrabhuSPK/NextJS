@@ -232,6 +232,7 @@ export default function DataTable({ apiUrl }) {
   return (
     <div className="w-full">
       <div className="flex items-center space-x-4 mb-4">
+          <Button onClick={() => router.push("/create-user")}>Create</Button>
         {selectedRowCount > 0 && (
           <DeleteDialog
             rowSelection={rowSelection}
@@ -243,7 +244,6 @@ export default function DataTable({ apiUrl }) {
           />
         )}
       </div>
-
 
 
       <DataSearch
