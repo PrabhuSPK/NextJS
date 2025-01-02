@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,14 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"; // Adjust based on your UI library
-import { Checkbox } from "@/components/ui/checkbox"; // Use Checkbox from your UI library or native HTML
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
-export default function CreateUserPage() {
+export default function UpdateUserPage() {
   const router = useRouter();
-  const apiUrl = "http://127.0.0.1:8000/api/user/"; // DRF endpoint
+  const searchParams = useSearchParams();
+  const userId = searchParams.get("id");
+  const apiUrl = `http://127.0.0.1:8000/api/user/${userId}/`;
 
   const [loading, setLoading] = useState(false);
   const [schema, setSchema] = useState({});
@@ -24,6 +26,7 @@ export default function CreateUserPage() {
 
   useEffect(() => {
     fetchSchema();
+    fetchUserData();
   }, []);
 
   /**
@@ -36,28 +39,47 @@ export default function CreateUserPage() {
         throw new Error(`OPTIONS request failed: ${res.status}`);
       }
       const metadata = await res.json();
-      const fields = metadata.actions?.POST || {};
+      const fields = metadata.actions?.PUT || {};
 
-      // Filter out read-only fields
-      const filteredFields = Object.keys(fields).reduce((acc, fieldName) => {
+      // Process fields to include choices and initialize formData
+      const processedFields = Object.keys(fields).reduce((acc, fieldName) => {
         if (!fields[fieldName].read_only) {
-          acc[fieldName] = fields[fieldName];
+          acc[fieldName] = {
+            ...fields[fieldName],
+            value: fields[fieldName].type === "boolean" ? false : "",
+            choices: fields[fieldName].choices || [],
+          };
         }
         return acc;
       }, {});
 
-      // Initialize formData for non-read-only fields
-      const initialData = {};
-      Object.keys(filteredFields).forEach((fieldName) => {
-        initialData[fieldName] =
-          filteredFields[fieldName].type === "boolean" ? false : ""; // Default boolean to false
-      });
+      setSchema(processedFields);
+      const initialFormData = Object.keys(processedFields).reduce((acc, key) => {
+        acc[key] = processedFields[key].value;
+        return acc;
+      }, {});
 
-      setFormData(initialData);
-      setSchema(filteredFields);
+      setFormData(initialFormData);
     } catch (error) {
       console.error("Error fetching schema:", error);
       toast.error("Failed to load form schema.");
+    }
+  }
+
+  /**
+   * Fetch existing user data
+   */
+  async function fetchUserData() {
+    try {
+      const res = await fetch(apiUrl, { method: "GET" });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch user data: ${res.status}`);
+      }
+      const data = await res.json();
+      setFormData((prev) => ({ ...prev, ...data })); // Merge user data into formData
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      toast.error("Failed to load user data.");
     }
   }
 
@@ -80,18 +102,18 @@ export default function CreateUserPage() {
     setLoading(true);
     try {
       const res = await fetch(apiUrl, {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       if (!res.ok) {
-        throw new Error(`Create failed with status ${res.status}`);
+        throw new Error(`Update failed with status ${res.status}`);
       }
-      toast.success("Record created successfully!");
-      router.push("/payments");
+      toast.success("Record updated successfully!");
+      router.push("/users");
     } catch (error) {
-      console.error("Error creating record:", error);
-      toast.error("Failed to create record.");
+      console.error("Error updating record:", error);
+      toast.error("Failed to update record.");
     } finally {
       setLoading(false);
     }
@@ -99,16 +121,16 @@ export default function CreateUserPage() {
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-4">Create User</h1>
+      <h1 className="text-2xl font-semibold mb-4">Update User</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {Object.entries(schema).map(([fieldName, field]) => (
           <div key={fieldName}>
             <label className="block text-sm font-medium mb-1">
               {field.label || fieldName} {field.required && <span className="text-red-500">*</span>}
             </label>
-            {/* Render dropdown for choice fields */}
             {field.type === "choice" ? (
               <Select
+                value={formData[fieldName]} // Ensure the dropdown shows the selected value
                 onValueChange={(value) =>
                   setFormData((prev) => ({ ...prev, [fieldName]: value }))
                 }
@@ -122,36 +144,32 @@ export default function CreateUserPage() {
                 <SelectContent>
                   {field.choices.map((choice) => (
                     <SelectItem key={choice.value} value={choice.value}>
-                      {choice.display_name}
+                      {choice.display_name || choice.value}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             ) : field.type === "boolean" ? (
-              // Render checkbox for boolean fields
               <Checkbox
-                checked={formData[fieldName]}
+                checked={!!formData[fieldName]} // Ensure checkbox reflects boolean state
                 onCheckedChange={(value) => handleCheckboxChange(fieldName, value)}
               >
                 {field.label || fieldName}
               </Checkbox>
             ) : (
-              // Render input for all other fields
               <Input
                 name={fieldName}
                 placeholder={field.label || fieldName}
-                value={formData[fieldName]}
+                value={formData[fieldName] || ""} // Ensure a default value is provided
                 onChange={handleChange}
               />
             )}
           </div>
         ))}
         <div className="flex items-center justify-end space-x-2 mt-6">
-          <Button variant="outline" onClick={() => router.push("/users")}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={() => router.push("/users")}>Cancel</Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create"}
+            {loading ? "Updating..." : "Update"}
           </Button>
         </div>
       </form>

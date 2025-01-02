@@ -21,7 +21,6 @@ import DataSearch from "./DataSearch";
 import ColumnVisibilityManager from "./ColumnVisibilityManager";
 import TableFilters from "./TableFilters";
 import TablePagination from "./TablePagination";
-import MyTable from "./MyTable";
 
 // Multi-value filter function (unchanged)
 function multiValueFilterFn(row, columnId, filterValues) {
@@ -33,7 +32,7 @@ function multiValueFilterFn(row, columnId, filterValues) {
 }
 
 export default function DataTable({ apiUrl }) {
-  const router = useRouter();  // for navigation
+  const router = useRouter(); // for navigation
 
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
@@ -46,10 +45,6 @@ export default function DataTable({ apiUrl }) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
-
-  // Multi-value filters
-  const [selectedFilters, setSelectedFilters] = useState({});
-  const [filterSearch, setFilterSearch] = useState({});
 
   // Pagination
   const [pageSize, setPageSize] = useState(10);
@@ -70,8 +65,6 @@ export default function DataTable({ apiUrl }) {
       const response = await fetch(url);
       const json = await response.json();
 
-      // Example DRF response:
-      // { data: [...], count: 123, next: "...", previous: "...", filter_options: {...} }
       setData(json.data || []);
 
       const totalPages = Math.ceil(json.count / pageSize);
@@ -87,11 +80,9 @@ export default function DataTable({ apiUrl }) {
         totalPages,
       });
 
-      // Filter options
       const opts = json.filter_options || {};
       setFilterOptions(opts);
 
-      // Dynamically build columns
       const builtColumns = [];
       if (json.data && json.data.length > 0) {
         const keys = Object.keys(json.data[0]);
@@ -151,7 +142,6 @@ export default function DataTable({ apiUrl }) {
 
       setColumns(builtColumns);
 
-      // Set default column visibility
       const visibilityState = builtColumns.reduce((acc, col) => {
         acc[col.accessorKey || col.id] = true;
         return acc;
@@ -166,18 +156,14 @@ export default function DataTable({ apiUrl }) {
     }
   };
 
-  // Initial data fetch
   useEffect(() => {
     fetchData(`${apiUrl}?page_size=${pageSize}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiUrl, pageSize]);
 
-  // Navigate
   const handleNavigate = (url) => {
     if (url) fetchData(url);
   };
 
-  // React Table instance
   const table = useReactTable({
     data,
     columns,
@@ -202,85 +188,71 @@ export default function DataTable({ apiUrl }) {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  // Reset filters
-  const handleResetFilters = () => {
-    setSelectedFilters({});
-    setFilterSearch({});
-    setGlobalFilter("");
-    table.setColumnFilters([]);
-  };
-
-  // Toggle multi-value filters
-  const handleToggleValue = (field, value, checked) => {
-    const updatedFilters = { ...selectedFilters };
-    if (checked) {
-      updatedFilters[field] = updatedFilters[field]
-        ? [...updatedFilters[field], value]
-        : [value];
-    } else {
-      updatedFilters[field] = updatedFilters[field].filter((v) => v !== value);
-    }
-    setSelectedFilters(updatedFilters);
-
-    // Update column filter
-    const col = table.getColumn(field);
-    if (col) {
-      col.setFilterValue(updatedFilters[field] || []);
-    }
-  };
-
-  // Search in filter dropdown
-  const handleSearchDropdown = (field, text) => {
-    setFilterSearch((prev) => ({ ...prev, [field]: text }));
-  };
-
-  // Count how many rows match a particular filter
-  const calculateFilterCounts = (field, value) => {
-    return table
-      .getFilteredRowModel()
-      .rows.filter((row) => String(row.original[field]) === value).length;
-  };
-
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="w-full">
-      {/* 
-        Create Button: 
-        Instead of opening a modal, we redirect to a separate create page.
-      */}
-      <Button onClick={() => router.push("/create-user")}>
-        Create
-      </Button>
+      <Button onClick={() => router.push("/create-user")}>Create</Button>
 
-      {/* Global Search & Reset */}
       <DataSearch
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
-        handleResetFilters={handleResetFilters}
+        handleResetFilters={() => {
+          setGlobalFilter("");
+          table.setColumnFilters([]);
+        }}
       />
 
-      {/* Column Visibility */}
       <ColumnVisibilityManager table={table} />
 
-      {/* Filters */}
       <TableFilters
         table={table}
         filterOptions={filterOptions}
-        selectedFilters={selectedFilters}
-        handleToggleValue={handleToggleValue}
-        filterSearch={filterSearch}
-        handleSearchDropdown={handleSearchDropdown}
-        calculateFilterCounts={calculateFilterCounts}
-        setSelectedFilters={setSelectedFilters}
+        selectedFilters={{}}
+        handleToggleValue={() => {}}
+        filterSearch={{}}
+        handleSearchDropdown={() => {}}
+        calculateFilterCounts={() => 0}
       />
 
-      {/* Table */}
-      <MyTable table={table} data={data} columns={columns} />
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className="border-b px-4 py-2 text-left">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className="cursor-pointer hover:bg-gray-100"
+                onClick={() => router.push(`/details-user?id=${row.original.id}`)}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="border-b px-4 py-2">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Pagination */}
       <TablePagination
         data={data}
         apiUrl={apiUrl}
