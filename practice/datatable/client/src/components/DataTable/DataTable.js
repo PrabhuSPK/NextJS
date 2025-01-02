@@ -21,6 +21,14 @@ import TableFilters from "./TableFilters";
 import TablePagination from "./TablePagination";
 import DeleteDialog from "@/components/CRUD/Delete";
 
+// Converts snake_case or camelCase to Title Case
+function formatHeader(header) {
+    return header
+      .replace(/_/g, " ") // Replace underscores with spaces
+      .replace(/([a-z])([A-Z])/g, "$1 $2") // Add spaces before camelCase uppercase letters
+      .replace(/(^\w|\s\w)/g, (match) => match.toUpperCase()); // Capitalize the first letter of each word
+  }
+
 // Multi-value filter function
 function multiValueFilterFn(row, columnId, filterValues) {
   if (!filterValues || filterValues.length === 0) {
@@ -129,7 +137,7 @@ export default function DataTable({ apiUrl }) {
                 }}
                 className="px-0"
               >
-                {key.charAt(0).toUpperCase() + key.slice(1)}
+               {formatHeader(key)} 
               </Button>
             ),
             cell: ({ row }) => {
@@ -236,7 +244,7 @@ export default function DataTable({ apiUrl }) {
         )}
       </div>
 
-      <Button onClick={() => router.push("/create-user")}>Create</Button>
+
 
       <DataSearch
         globalFilter={globalFilter}
@@ -247,7 +255,6 @@ export default function DataTable({ apiUrl }) {
         }}
       />
 
-      <ColumnVisibilityManager table={table} />
 
       <TableFilters
         filterOptions={filterOptions}
@@ -256,43 +263,48 @@ export default function DataTable({ apiUrl }) {
         filterSearch={filterSearch}
         handleSearchDropdown={handleSearchDropdown}
         calculateFilterCounts={calculateFilterCounts}
+        table={table}
       />
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="border-b px-4 py-2 text-left">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => router.push(`/details-user?id=${row.original.id}`)}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="border-b px-4 py-2">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+<div className="overflow-x-auto">
+  <table className="min-w-full border-collapse shadow-lg rounded-lg border border-gray-300">
+    <thead>
+      {table.getHeaderGroups().map((headerGroup) => (
+        <tr key={headerGroup.id} className="bg-gray-100">
+          {headerGroup.headers.map((header) => (
+            <th
+              key={header.id}
+              className="px-4 py-2 text-left border-b-2 border-gray-300"
+            >
+              {header.isPlaceholder
+                ? null
+                : flexRender(header.column.columnDef.header, header.getContext())}
+            </th>
+          ))}
+        </tr>
+      ))}
+    </thead>
+    <tbody>
+      {table.getRowModel().rows.map((row) => (
+        <tr
+          key={row.id}
+          className="cursor-pointer hover:bg-gray-50 shadow-sm transition duration-200 ease-in-out"
+          onClick={() => router.push(`/details-user?id=${row.original.id}`)}
+        >
+          {row.getVisibleCells().map((cell) => (
+            <td
+              key={cell.id}
+              className="px-4 py-2 border-b border-gray-200"
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
 
       <TablePagination
         data={data}

@@ -15,11 +15,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ColumnVisibilityManager({ table }) {
   return (
-    <div className="flex items-center mb-4">
+    <div className="flex items-center gap-4">
+      {/* Visibility Dropdown Button */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline">
-            Manage Columns <ChevronDown className="ml-1 h-4 w-4" />
+          <Button variant="outline" className="flex items-center">
+            Visibility <ChevronDown className="ml-1 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
