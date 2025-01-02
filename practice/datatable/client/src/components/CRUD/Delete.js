@@ -1,44 +1,60 @@
-"use client";
-import React, { useState } from "react";
+// components/CRUD/delete.js
+
+import React from "react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "react-toastify";
 
-/**
- * Minimal example for deleting an existing record.
- *
- * Props:
- * - apiUrl: e.g. "http://127.0.0.1:8000/api/user/"
- * - recordId: e.g. 1 (the primary key of the record you're deleting)
- * - onSuccess: callback after successful delete
- * - onError: callback after an error
- */
-export default function DeleteRecord({ apiUrl, recordId, onSuccess, onError }) {
-  const [loading, setLoading] = useState(false);
+export default function DeleteDialog({ rowSelection, apiUrl, pageSize, fetchData, setRowSelection }) {
+  const handleDelete = async () => {
+    const selectedIds = Object.keys(rowSelection).filter((rowId) => rowSelection[rowId]);
 
-  async function handleDelete() {
-    if (!recordId) return;
-    try {
-      setLoading(true);
-      const response = await fetch(`${apiUrl}${recordId}/`, {
-        method: "DELETE",
-      });
-      if (!response.ok && response.status !== 204) {
-        // 204 = No Content (success on DELETE)
-        throw new Error(`Delete failed with status ${response.status}`);
-      }
-      if (onSuccess) onSuccess(recordId);
-    } catch (error) {
-      console.error("Error deleting record:", error);
-      if (onError) onError(error);
-    } finally {
-      setLoading(false);
+    if (selectedIds.length === 0) {
+      toast.error("No rows selected");
+      return;
     }
-  }
 
-  if (!recordId) return <div>No record selected to delete.</div>;
+    try {
+      const response = await fetch(`${apiUrl}delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+
+      if (response.ok) {
+        toast.success("Selected rows deleted successfully");
+        // Re-fetch data to reflect changes
+        fetchData(`${apiUrl}?page_size=${pageSize}`);
+        setRowSelection({});
+      } else {
+        toast.error("Failed to delete selected rows");
+      }
+    } catch (error) {
+      console.error("Error deleting rows:", error);
+      toast.error("Error deleting rows");
+    }
+  };
 
   return (
-    <Button variant="destructive" onClick={handleDelete} disabled={loading}>
-      {loading ? "Deleting..." : "Delete"}
-    </Button>
+    <Dialog>
+      <DialogTrigger asChild>
+        {/* Pass Button as child to DialogTrigger, so it doesn't get wrapped in another button */}
+        <Button onClick={handleDelete}>Delete Selected</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm Deletion</DialogTitle>
+        </DialogHeader>
+        <DialogDescription>
+          Are you sure you want to delete the selected rows?
+        </DialogDescription>
+        <DialogFooter>
+          <Button variant="ghost">Cancel</Button>
+          <Button onClick={handleDelete}>Confirm</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

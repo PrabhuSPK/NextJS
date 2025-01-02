@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useRouter } from "next/navigation"; // or "next/router" if using pages directory
+import { useRouter } from "next/navigation";
 
 // UI
 import { Button } from "@/components/ui/button";
@@ -104,6 +104,7 @@ export default function DataTable({ apiUrl }) {
             <Checkbox
               checked={row.getIsSelected()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
+              onClick={(e) => e.stopPropagation()} // Prevents propagation of click event to the row
               aria-label="Select row"
             />
           ),
