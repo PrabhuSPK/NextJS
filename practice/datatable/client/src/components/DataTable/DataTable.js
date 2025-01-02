@@ -10,25 +10,18 @@ import {
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 
-// UI
+// UI Components
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { ArrowUpDown } from "lucide-react";
 
-// Child components
+// Child Components
 import DataSearch from "./DataSearch";
 import ColumnVisibilityManager from "./ColumnVisibilityManager";
 import TableFilters from "./TableFilters";
 import TablePagination from "./TablePagination";
+import DeleteDialog from "@/components/CRUD/Delete";
 
-// Multi-value filter function (unchanged)
+// Multi-value filter function
 function multiValueFilterFn(row, columnId, filterValues) {
   if (!filterValues || filterValues.length === 0) {
     return true;
@@ -43,11 +36,12 @@ export default function DataTable({ apiUrl }) {
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [filterOptions, setFilterOptions] = useState({});
+  const [selectedFilters, setSelectedFilters] = useState({});
+  const [filterSearch, setFilterSearch] = useState({});
   const [loading, setLoading] = useState(true);
 
   // Table states
   const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
@@ -61,9 +55,6 @@ export default function DataTable({ apiUrl }) {
     currentPage: 1,
     totalPages: 1,
   });
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [deleteType, setDeleteType] = useState(null); // 'single' or 'all'
 
   // -------------------------------------------------------
   // Fetch data
@@ -139,7 +130,6 @@ export default function DataTable({ apiUrl }) {
                 className="px-0"
               >
                 {key.charAt(0).toUpperCase() + key.slice(1)}
-                <ArrowUpDown className="ml-1 h-4 w-4" />
               </Button>
             ),
             cell: ({ row }) => {
@@ -170,46 +160,38 @@ export default function DataTable({ apiUrl }) {
     fetchData(`${apiUrl}?page_size=${pageSize}`);
   }, [apiUrl, pageSize]);
 
-  const handleNavigate = (url) => {
-    if (url) fetchData(url);
-  };
+  const handleToggleValue = (field, value, add, clear = false) => {
+    setSelectedFilters((prevFilters) => {
+      const newFilters = { ...prevFilters };
 
-  const handleDelete = async () => {
-    try {
-      if (deleteType === "single") {
-        const internalRowId = Object.keys(rowSelection)[0];
-        const dbRowId = table.getRowModel().rows.find(
-          (row) => row.id === internalRowId
-        )?.original?.id;
-
-        if (dbRowId) {
-          await fetch(`http://127.0.0.1:8000/api/user/${dbRowId}/`, {
-            method: "DELETE",
-          });
-          console.log(`Deleted row with ID: ${dbRowId}`);
-        }
-      } else if (deleteType === "all") {
-        const selectedIds = Object.keys(rowSelection)
-          .map((rowId) =>
-            table.getRowModel().rows.find((row) => row.id === rowId)?.original?.id
-          )
-          .filter((id) => id);
-
-        if (selectedIds.length > 0) {
-          await fetch("http://127.0.0.1:8000/api/user/delete/", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ids: selectedIds }),
-          });
-          console.log(`Deleted rows with IDs: ${selectedIds.join(", ")}`);
+      if (clear) {
+        // Clear all filters for the field
+        newFilters[field] = [];
+      } else {
+        if (!newFilters[field]) newFilters[field] = [];
+        if (add) {
+          newFilters[field] = [...new Set([...newFilters[field], value])];
+        } else {
+          newFilters[field] = newFilters[field].filter((val) => val !== value);
         }
       }
-      setIsDialogOpen(false);
-      setRowSelection({});
-      fetchData(`${apiUrl}?page_size=${pageSize}`); // Refresh the table data
-    } catch (error) {
-      console.error("Error deleting rows:", error);
-    }
+
+      const col = table.getColumn(field);
+      if (col) col.setFilterValue(newFilters[field]);
+
+      return newFilters;
+    });
+  };
+
+  const handleSearchDropdown = (field, searchText) => {
+    setFilterSearch((prevOptions) => ({
+      ...prevOptions,
+      [field]: searchText,
+    }));
+  };
+
+  const calculateFilterCounts = (field, value) => {
+    return data.filter((row) => String(row[field]) === String(value)).length;
   };
 
   const table = useReactTable({
@@ -217,7 +199,6 @@ export default function DataTable({ apiUrl }) {
     columns,
     state: {
       sorting,
-      columnFilters,
       globalFilter,
       columnVisibility,
       rowSelection,
@@ -227,8 +208,6 @@ export default function DataTable({ apiUrl }) {
     },
     enableSortingRemoval: false,
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
@@ -245,55 +224,15 @@ export default function DataTable({ apiUrl }) {
   return (
     <div className="w-full">
       <div className="flex items-center space-x-4 mb-4">
-        {selectedRowCount === 1 && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  setDeleteType("single");
-                  setIsDialogOpen(true);
-                }}
-              >
-                Delete
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogTitle>Confirm Deletion</DialogTitle>
-              <p>Do you really want to delete this row?</p>
-              <DialogFooter>
-                <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button variant="destructive" onClick={handleDelete}>
-                  Confirm
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-        {selectedRowCount > 1 && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  setDeleteType("all");
-                  setIsDialogOpen(true);
-                }}
-              >
-                Delete All
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogTitle>Confirm Bulk Deletion</DialogTitle>
-              <p>Do you really want to delete all selected rows?</p>
-              <DialogFooter>
-                <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button variant="destructive" onClick={handleDelete}>
-                  Confirm
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+        {selectedRowCount > 0 && (
+          <DeleteDialog
+            rowSelection={rowSelection}
+            apiUrl={apiUrl}
+            pageSize={pageSize}
+            fetchData={fetchData}
+            setRowSelection={setRowSelection}
+            table={table}
+          />
         )}
       </div>
 
@@ -311,13 +250,12 @@ export default function DataTable({ apiUrl }) {
       <ColumnVisibilityManager table={table} />
 
       <TableFilters
-        table={table}
         filterOptions={filterOptions}
-        selectedFilters={{}}
-        handleToggleValue={() => {}}
-        filterSearch={{}}
-        handleSearchDropdown={() => {}}
-        calculateFilterCounts={() => 0}
+        selectedFilters={selectedFilters}
+        handleToggleValue={handleToggleValue}
+        filterSearch={filterSearch}
+        handleSearchDropdown={handleSearchDropdown}
+        calculateFilterCounts={calculateFilterCounts}
       />
 
       <div className="overflow-x-auto">
@@ -362,7 +300,7 @@ export default function DataTable({ apiUrl }) {
         pageSize={pageSize}
         setPageSize={setPageSize}
         paginationLinks={paginationLinks}
-        handleNavigate={handleNavigate}
+        handleNavigate={(url) => fetchData(url)}
         fetchData={fetchData}
       />
     </div>

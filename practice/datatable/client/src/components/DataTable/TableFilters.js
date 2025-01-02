@@ -15,14 +15,12 @@ import {
 import { ChevronDown } from "lucide-react";
 
 export default function TableFilters({
-  table,
   filterOptions,
   selectedFilters,
-  handleToggleValue,
   filterSearch,
+  handleToggleValue,
   handleSearchDropdown,
   calculateFilterCounts,
-  setSelectedFilters,
 }) {
   return (
     <div className="flex flex-wrap gap-2 mb-4">
@@ -89,9 +87,7 @@ export default function TableFilters({
                 className="text-red-500"
                 onSelect={(e) => {
                   e.preventDefault();
-                  setSelectedFilters((prev) => ({ ...prev, [field]: [] }));
-                  const col = table.getColumn(field);
-                  if (col) col.setFilterValue([]);
+                  handleToggleValue(field, null, false, true);
                 }}
               >
                 Clear filters
