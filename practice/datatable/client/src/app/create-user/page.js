@@ -88,7 +88,7 @@ export default function CreateUserPage() {
         throw new Error(`Create failed with status ${res.status}`);
       }
       toast.success("Record created successfully!");
-      router.push("/payments");
+      router.push("/users");
     } catch (error) {
       console.error("Error creating record:", error);
       toast.error("Failed to create record.");
