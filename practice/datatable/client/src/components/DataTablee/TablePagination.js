@@ -1,34 +1,24 @@
-"use client";
-
+// File: components/DataTable/TablePagination.js
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import {
   ChevronsLeft,
+  ChevronsRight,
   ChevronLeft,
   ChevronRight,
-  ChevronsRight,
-  ChevronDown,
 } from "lucide-react";
 
 export default function TablePagination({
-  data,
   apiUrl,
+  paginationLinks,
+  fetchData,
   pageSize,
   setPageSize,
-  paginationLinks,
-  handleNavigate,
-  fetchData,
 }) {
   return (
     <div className="flex items-center justify-between py-4">
       <div className="text-sm text-muted-foreground">
-        Showing {data.length} of {paginationLinks.count} rows.
+        Showing {paginationLinks.currentPage} of {paginationLinks.totalPages} rows.
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -43,7 +33,7 @@ export default function TablePagination({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleNavigate(paginationLinks.previous)}
+          onClick={() => fetchData(paginationLinks.previous)}
           disabled={!paginationLinks.previous}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -55,7 +45,7 @@ export default function TablePagination({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleNavigate(paginationLinks.next)}
+          onClick={() => fetchData(paginationLinks.next)}
           disabled={!paginationLinks.next}
         >
           Next
@@ -75,25 +65,17 @@ export default function TablePagination({
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm">Rows per page:</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              {pageSize}
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {[10, 20, 50].map((size) => (
-              <DropdownMenuItem
-                key={size}
-                onSelect={() => setPageSize(size)}
-                className="cursor-pointer"
-              >
-                {size}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <select
+          value={pageSize}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+          className="border p-2 rounded-md"
+        >
+          {[10, 20, 50].map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

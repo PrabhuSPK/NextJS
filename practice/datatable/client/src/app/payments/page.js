@@ -1,7 +1,8 @@
 "use client"
 
 import React from "react"
-import DynamicShadcnTable from "@/components/DynamicShadcnTable"
+// import DynamicShadcnTable from "@/components/DynamicShadcnTable"
+import DynamicShadcnTable from "@/components/DataTable";
 
 export default function AdminDashboard() {
   return (

@@ -1,28 +1,24 @@
-"use client";
-
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
+  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function TableFilters({
-  table,
   filterOptions,
   selectedFilters,
-  handleToggleValue,
   filterSearch,
+  handleToggleValue,
   handleSearchDropdown,
-  calculateFilterCounts,
   setSelectedFilters,
+  table,
 }) {
   return (
     <div className="flex flex-wrap gap-2 mb-4">
@@ -44,7 +40,6 @@ export default function TableFilters({
                     : {selectedValues.join(", ")}
                   </span>
                 )}
-                <ChevronDown className="ml-1 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-64">
@@ -65,7 +60,6 @@ export default function TableFilters({
               ) : (
                 displayedValues.map((val) => {
                   const isChecked = selectedValues.includes(val);
-                  const count = calculateFilterCounts(field, val);
                   return (
                     <DropdownMenuItem
                       key={val}
@@ -75,11 +69,8 @@ export default function TableFilters({
                         handleToggleValue(field, val, !isChecked);
                       }}
                     >
-                      <div className="flex items-center gap-2">
-                        <Checkbox checked={isChecked} />
-                        <span>{val}</span>
-                      </div>
-                      <span className="text-muted-foreground">{count}</span>
+                      <Checkbox checked={isChecked} />
+                      <span>{val}</span>
                     </DropdownMenuItem>
                   );
                 })
