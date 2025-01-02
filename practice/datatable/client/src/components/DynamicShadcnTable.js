@@ -73,7 +73,7 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
       const response = await fetch(url);
       const json = await response.json();
 
-      setData(json.results || []);
+      setData(json.data || []);
       const totalPages = Math.ceil(json.count / pageSize);
       const currentPage = json.next
         ? new URL(json.next).searchParams.get("page") - 1
@@ -93,8 +93,8 @@ export default function DynamicShadcnTable({ apiUrl, searchableField = "name" })
 
       // Dynamically build columns based on the API response
       const builtColumns = [];
-      if (json.results.length > 0) {
-        const keys = Object.keys(json.results[0]);
+      if (json.data.length > 0) {
+        const keys = Object.keys(json.data[0]);
 
         // Add "Select" column for row selection
         builtColumns.push({

@@ -8,12 +8,12 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { useRouter } from "next/navigation"; // or "next/router" if using pages directory
 
+// UI
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-
-// Icons
 import { ArrowUpDown } from "lucide-react";
 
 // Child components
@@ -23,9 +23,7 @@ import TableFilters from "./TableFilters";
 import TablePagination from "./TablePagination";
 import MyTable from "./MyTable";
 
-// ---------------------------------------------------------
-// Multi-value filter function
-// ---------------------------------------------------------
+// Multi-value filter function (unchanged)
 function multiValueFilterFn(row, columnId, filterValues) {
   if (!filterValues || filterValues.length === 0) {
     return true;
@@ -34,7 +32,9 @@ function multiValueFilterFn(row, columnId, filterValues) {
   return filterValues.includes(String(rowValue));
 }
 
-export default function DataTable({ apiUrl, searchableField = "name" }) {
+export default function DataTable({ apiUrl }) {
+  const router = useRouter();  // for navigation
+
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [filterOptions, setFilterOptions] = useState({});
@@ -47,12 +47,12 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
 
-  // Custom states to handle multiple-value filters
+  // Multi-value filters
   const [selectedFilters, setSelectedFilters] = useState({});
   const [filterSearch, setFilterSearch] = useState({});
 
-  // Pagination states
-  const [pageSize, setPageSize] = useState(10); // rows per page
+  // Pagination
+  const [pageSize, setPageSize] = useState(10);
   const [paginationLinks, setPaginationLinks] = useState({
     next: null,
     previous: null,
@@ -70,7 +70,10 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
       const response = await fetch(url);
       const json = await response.json();
 
-      setData(json.results || []);
+      // Example DRF response:
+      // { data: [...], count: 123, next: "...", previous: "...", filter_options: {...} }
+      setData(json.data || []);
+
       const totalPages = Math.ceil(json.count / pageSize);
       const currentPage = json.next
         ? Number(new URL(json.next).searchParams.get("page")) - 1
@@ -84,16 +87,16 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
         totalPages,
       });
 
-      // Extract filter options
+      // Filter options
       const opts = json.filter_options || {};
       setFilterOptions(opts);
 
-      // Dynamically build columns based on the API response
+      // Dynamically build columns
       const builtColumns = [];
-      if (json.results && json.results.length > 0) {
-        const keys = Object.keys(json.results[0]);
+      if (json.data && json.data.length > 0) {
+        const keys = Object.keys(json.data[0]);
 
-        // Add "Select" column for row selection
+        // Add checkbox selection column
         builtColumns.push({
           id: "select",
           header: ({ table }) => (
@@ -117,7 +120,7 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
           enableHiding: false,
         });
 
-        // Add dynamic columns
+        // Build dynamic columns
         keys.forEach((key) => {
           builtColumns.push({
             accessorKey: key,
@@ -148,7 +151,7 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
 
       setColumns(builtColumns);
 
-      // Set default visibility for all columns
+      // Set default column visibility
       const visibilityState = builtColumns.reduce((acc, col) => {
         acc[col.accessorKey || col.id] = true;
         return acc;
@@ -163,26 +166,18 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
     }
   };
 
-  // -------------------------------------------------------
-  // Initial data fetch on mount (and whenever pageSize changes)
-  // -------------------------------------------------------
+  // Initial data fetch
   useEffect(() => {
     fetchData(`${apiUrl}?page_size=${pageSize}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiUrl, pageSize]);
 
-  // -------------------------------------------------------
-  // Navigation
-  // -------------------------------------------------------
+  // Navigate
   const handleNavigate = (url) => {
-    if (url) {
-      fetchData(url);
-    }
+    if (url) fetchData(url);
   };
 
-  // -------------------------------------------------------
   // React Table instance
-  // -------------------------------------------------------
   const table = useReactTable({
     data,
     columns,
@@ -207,9 +202,7 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  // -------------------------------------------------------
-  // Handle filter reset
-  // -------------------------------------------------------
+  // Reset filters
   const handleResetFilters = () => {
     setSelectedFilters({});
     setFilterSearch({});
@@ -217,12 +210,9 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
     table.setColumnFilters([]);
   };
 
-  // -------------------------------------------------------
-  // Handle toggling of filter values
-  // -------------------------------------------------------
+  // Toggle multi-value filters
   const handleToggleValue = (field, value, checked) => {
     const updatedFilters = { ...selectedFilters };
-
     if (checked) {
       updatedFilters[field] = updatedFilters[field]
         ? [...updatedFilters[field], value]
@@ -230,26 +220,21 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
     } else {
       updatedFilters[field] = updatedFilters[field].filter((v) => v !== value);
     }
-
     setSelectedFilters(updatedFilters);
 
-    // Update column filter dynamically
+    // Update column filter
     const col = table.getColumn(field);
     if (col) {
       col.setFilterValue(updatedFilters[field] || []);
     }
   };
 
-  // -------------------------------------------------------
-  // Search within the dropdown filter list
-  // -------------------------------------------------------
+  // Search in filter dropdown
   const handleSearchDropdown = (field, text) => {
     setFilterSearch((prev) => ({ ...prev, [field]: text }));
   };
 
-  // -------------------------------------------------------
-  // Calculate how many results each filter option has
-  // -------------------------------------------------------
+  // Count how many rows match a particular filter
   const calculateFilterCounts = (field, value) => {
     return table
       .getFilteredRowModel()
@@ -262,6 +247,14 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
 
   return (
     <div className="w-full">
+      {/* 
+        Create Button: 
+        Instead of opening a modal, we redirect to a separate create page.
+      */}
+      <Button onClick={() => router.push("/create-user")}>
+        Create
+      </Button>
+
       {/* Global Search & Reset */}
       <DataSearch
         globalFilter={globalFilter}
@@ -284,7 +277,7 @@ export default function DataTable({ apiUrl, searchableField = "name" }) {
         setSelectedFilters={setSelectedFilters}
       />
 
-      {/* The actual table */}
+      {/* Table */}
       <MyTable table={table} data={data} columns={columns} />
 
       {/* Pagination */}
