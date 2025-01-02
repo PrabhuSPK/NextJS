@@ -15,7 +15,7 @@ export default function DeleteDialog({ rowSelection, apiUrl, pageSize, fetchData
     }
 
     try {
-      const response = await fetch(`${apiUrl}delete`, {
+      const response = await fetch(`${apiUrl}delete/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

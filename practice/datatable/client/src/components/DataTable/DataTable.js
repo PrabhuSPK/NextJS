@@ -12,8 +12,14 @@ import { useRouter } from "next/navigation";
 
 // UI
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ArrowUpDown } from "lucide-react";
 
 // Child components
@@ -32,7 +38,7 @@ function multiValueFilterFn(row, columnId, filterValues) {
 }
 
 export default function DataTable({ apiUrl }) {
-  const router = useRouter(); // for navigation
+  const router = useRouter();
 
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
@@ -55,6 +61,9 @@ export default function DataTable({ apiUrl }) {
     currentPage: 1,
     totalPages: 1,
   });
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState(null); // 'single' or 'all'
 
   // -------------------------------------------------------
   // Fetch data
@@ -165,6 +174,44 @@ export default function DataTable({ apiUrl }) {
     if (url) fetchData(url);
   };
 
+  const handleDelete = async () => {
+    try {
+      if (deleteType === "single") {
+        const internalRowId = Object.keys(rowSelection)[0];
+        const dbRowId = table.getRowModel().rows.find(
+          (row) => row.id === internalRowId
+        )?.original?.id;
+
+        if (dbRowId) {
+          await fetch(`http://127.0.0.1:8000/api/user/${dbRowId}/`, {
+            method: "DELETE",
+          });
+          console.log(`Deleted row with ID: ${dbRowId}`);
+        }
+      } else if (deleteType === "all") {
+        const selectedIds = Object.keys(rowSelection)
+          .map((rowId) =>
+            table.getRowModel().rows.find((row) => row.id === rowId)?.original?.id
+          )
+          .filter((id) => id);
+
+        if (selectedIds.length > 0) {
+          await fetch("http://127.0.0.1:8000/api/user/delete/", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: selectedIds }),
+          });
+          console.log(`Deleted rows with IDs: ${selectedIds.join(", ")}`);
+        }
+      }
+      setIsDialogOpen(false);
+      setRowSelection({});
+      fetchData(`${apiUrl}?page_size=${pageSize}`); // Refresh the table data
+    } catch (error) {
+      console.error("Error deleting rows:", error);
+    }
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -189,12 +236,67 @@ export default function DataTable({ apiUrl }) {
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const selectedRowCount = Object.keys(rowSelection).length;
+
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="w-full">
+      <div className="flex items-center space-x-4 mb-4">
+        {selectedRowCount === 1 && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setDeleteType("single");
+                  setIsDialogOpen(true);
+                }}
+              >
+                Delete
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <p>Do you really want to delete this row?</p>
+              <DialogFooter>
+                <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleDelete}>
+                  Confirm
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+        {selectedRowCount > 1 && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setDeleteType("all");
+                  setIsDialogOpen(true);
+                }}
+              >
+                Delete All
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogTitle>Confirm Bulk Deletion</DialogTitle>
+              <p>Do you really want to delete all selected rows?</p>
+              <DialogFooter>
+                <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleDelete}>
+                  Confirm
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
       <Button onClick={() => router.push("/create-user")}>Create</Button>
 
       <DataSearch
