@@ -129,20 +129,6 @@ export default function TableFilters({
         })}
       </div>
 
-      {/* Right side - Buttons Section */}
-      <div className="flex items-center gap-4">
-        {/* Delete Button */}
-        {selectedRowCount > 0 && (
-          <DeleteDialog
-            rowSelection={selectedRowCount}
-            apiUrl={apiUrl}
-            pageSize={pageSize}
-            fetchData={fetchData}
-            setRowSelection={selectedRowCount}
-            table={table}
-          />
-        )}
-
         {/* Column Visibility Button */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
