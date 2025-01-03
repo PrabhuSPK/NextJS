@@ -251,7 +251,9 @@ export default function DataTable({ apiUrl }) {
         setGlobalFilter={setGlobalFilter}
         handleResetFilters={() => {
           setGlobalFilter("");
-          table.setColumnFilters([]);
+          setSelectedFilters({}); // Clear selected filters
+          setFilterSearch({}); // Clear search filters
+          table.setColumnFilters([]); // Reset table column filters
         }}
       />
 
