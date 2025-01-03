@@ -15,6 +15,7 @@ import {
 import { ChevronDown, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import DeleteDialog from "@/components/CRUD/Delete";
+import ColumnVisibilityManager from "@/components/DataTable/ColumnVisibilityManager";
 
 // Converts snake_case or camelCase to Title Case
 function formatHeader(header) {
@@ -87,13 +88,13 @@ export default function TableFilters({
                     onClick={(e) => e.stopPropagation()} // Prevent dropdown close
                   />
                   {searchText && (
-                   <X
-                   className="absolute right-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-red-500 cursor-pointer"
-                   onClick={(e) => {
-                     e.stopPropagation(); // Prevent dropdown close
-                     handleSearchDropdown(field, "");
-                   }}
-                 />
+                    <X
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-red-500 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent dropdown close
+                        handleSearchDropdown(field, "");
+                      }}
+                    />
                   )}
                 </div>
 
@@ -135,31 +136,7 @@ export default function TableFilters({
       </div>
 
       {/* Column Visibility Button */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
-          >
-            View <ChevronDown className="ml-1 h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Toggle Column Visibility</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {table.getAllColumns().map((column) => (
-            <DropdownMenuItem
-              key={column.id}
-              className="flex items-center gap-2"
-              onClick={(e) => e.stopPropagation()} // Prevent default behavior
-              onSelect={() => column.toggleVisibility()}
-            >
-              <Checkbox checked={column.getIsVisible()} />
-              <span className="capitalize">{column.id}</span>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ColumnVisibilityManager table={table} />
     </div>
   );
 }
