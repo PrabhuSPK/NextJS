@@ -23,21 +23,23 @@ export default function ColumnVisibilityManager({ table }) {
             Visibility <ChevronDown className="ml-1 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent
+          align="start"
+          onClick={(e) => e.stopPropagation()} // Prevent closing the dropdown
+        >
           <DropdownMenuLabel>Toggle Column Visibility</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {table.getAllColumns().map((column) => (
-            <DropdownMenuItem
+            <div
               key={column.id}
-              className="flex items-center gap-2"
-              onSelect={(e) => {
-                e.preventDefault();
-                column.toggleVisibility();
-              }}
+              className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-100"
             >
-              <Checkbox checked={column.getIsVisible()} />
+              <Checkbox
+                checked={column.getIsVisible()}
+                onCheckedChange={() => column.toggleVisibility()}
+              />
               <span className="capitalize">{column.id}</span>
-            </DropdownMenuItem>
+            </div>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>

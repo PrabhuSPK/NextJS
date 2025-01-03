@@ -271,9 +271,7 @@ export default function DataTable({ apiUrl }) {
       />
 
 <div className="w-full">
-      {/* <div className="flex items-center justify-between mb-4">
-        <Button onClick={() => router.push("/create-user")}>Create</Button>
-      </div> */}
+
       <Table className="border border-gray-200 rounded-lg overflow-hidden">
   <TableHeader className="bg-gray-50">
     {table.getHeaderGroups().map((headerGroup) => (
@@ -354,7 +352,8 @@ export default function DataTable({ apiUrl }) {
                 className="hover:bg-gray-50 cursor-pointer"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell key={cell.id} className="px-4 py-3 text-sm text-gray-700 border-b border-gray-200 whitespace-nowrap">
+                    
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
