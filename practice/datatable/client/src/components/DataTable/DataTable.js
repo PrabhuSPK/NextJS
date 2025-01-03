@@ -266,6 +266,7 @@ export default function DataTable({ apiUrl }) {
         handleSearchDropdown={handleSearchDropdown}
         calculateFilterCounts={calculateFilterCounts}
         table={table}
+        selectedRowCount={selectedRowCount}
       />
 
 <div className="overflow-x-auto">

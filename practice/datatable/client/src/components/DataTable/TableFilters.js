@@ -12,8 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
-import { useRouter } from 'next/navigation'
+import { ChevronDown, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import DeleteDialog from "@/components/CRUD/Delete";
 
 // Converts snake_case or camelCase to Title Case
@@ -31,12 +31,12 @@ export default function TableFilters({
   handleToggleValue,
   handleSearchDropdown,
   calculateFilterCounts,
-  table, // Pass table here for ColumnVisibilityManager
-  selectedRowCount, // Assuming this is passed for delete functionality
-  handleResetFilters, // Reset filters function
-  fetchData, // Fetch data function
-  apiUrl, // API URL
-  pageSize, // Page size
+  table,
+  selectedRowCount,
+  handleResetFilters,
+  fetchData,
+  apiUrl,
+  pageSize,
 }) {
   const router = useRouter();
 
@@ -54,75 +54,77 @@ export default function TableFilters({
 
           return (
             <DropdownMenu key={field}>
-  <DropdownMenuTrigger asChild>
-  <Button
+              <DropdownMenuTrigger asChild>
+                <Button
                   variant="outline"
                   className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
                 >
-      {formatHeader(field)}
-      {selectedValues.length > 0 && (
-        <span className="ml-1 truncate max-w-xs text-muted-foreground text-xs">
-          : {selectedValues.join(", ")}
-        </span>
-      )}
-      <ChevronDown className="ml-1 h-3 w-3" />
-    </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent align="start" className="w-48 p-2 text-sm">
-    <DropdownMenuLabel className="text-xs font-semibold">
-      {formatHeader(field)}
-    </DropdownMenuLabel>
-    <DropdownMenuSeparator className="my-1" />
-    <DropdownMenuItem asChild>
-      <div className="p-2 w-full">
-        <Input
-          placeholder={`Search ${formatHeader(field)}...`}
-          value={searchText}
-          onChange={(e) => handleSearchDropdown(field, e.target.value)}
-          className="text-sm"
-        />
-      </div>
-    </DropdownMenuItem>
-    <DropdownMenuSeparator className="my-1" />
-    {displayedValues.length === 0 ? (
-      <DropdownMenuItem className="text-xs text-gray-500">
-        No {formatHeader(field)} found
-      </DropdownMenuItem>
-    ) : (
-      displayedValues.map((val) => {
-        const isChecked = selectedValues.includes(val);
-        const count = calculateFilterCounts(field, val);
-        return (
-          <DropdownMenuItem
-            key={val}
-            className="flex items-center gap-2 justify-between text-sm"
-            onSelect={(e) => {
-              e.preventDefault();
-              handleToggleValue(field, val, !isChecked);
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <Checkbox checked={isChecked} />
-              <span>{val}</span>
-            </div>
-            <span className="text-gray-500 text-xs">{count}</span>
-          </DropdownMenuItem>
-        );
-      })
-    )}
-    <DropdownMenuSeparator className="my-1" />
-    <DropdownMenuItem
-      className="text-red-500 text-xs flex justify-center items-center"
-      onSelect={(e) => {
-        e.preventDefault();
-        handleToggleValue(field, null, false, true);
-      }}
-    >
-      Clear
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
-
+                  {formatHeader(field)}
+                  {selectedValues.length > 0 && (
+                    <span className="ml-1 truncate max-w-xs text-muted-foreground text-xs">
+                      : {selectedValues.join(", ")}
+                    </span>
+                  )}
+                  <ChevronDown className="ml-1 h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="w-64 p-2 text-sm max-h-60 overflow-y-auto" // Fixed box size
+                onClick={(e) => e.stopPropagation()} // Prevent dropdown close
+              >
+                <DropdownMenuLabel className="text-xs font-semibold flex justify-between items-center">
+                  {formatHeader(field)}
+                  {searchText && (
+                    <X
+                      className="h-4 w-4 text-red-500 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent dropdown close
+                        handleSearchDropdown(field, "");
+                      }}
+                    />
+                  )}
+                </DropdownMenuLabel>
+                <Input
+                  placeholder={`Search ${formatHeader(field)}...`}
+                  value={searchText}
+                  className="mt-2 mb-2"
+                  onChange={(e) => handleSearchDropdown(field, e.target.value)}
+                  onClick={(e) => e.stopPropagation()} // Prevent dropdown close
+                />
+                <DropdownMenuSeparator className="my-1" />
+                {displayedValues.length === 0 ? (
+                  <div className="text-xs text-gray-500 px-2">
+                    No {formatHeader(field)} found
+                  </div>
+                ) : (
+                  displayedValues.map((val) => {
+                    const isChecked = selectedValues.includes(val);
+                    const count = calculateFilterCounts(field, val);
+                    return (
+                      <div
+                        key={val}
+                        className="flex items-center gap-2 justify-between px-2 py-1 text-sm cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleToggleValue(field, val, !isChecked)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Checkbox checked={isChecked} />
+                          <span>{val}</span>
+                        </div>
+                        <span className="text-gray-500 text-xs">{count}</span>
+                      </div>
+                    );
+                  })
+                )}
+                <DropdownMenuSeparator className="my-1" />
+                <div
+                  className="text-red-500 text-xs flex justify-center items-center cursor-pointer py-1 hover:bg-gray-100"
+                  onClick={() => handleToggleValue(field, null, false, true)}
+                >
+                  Clear
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         })}
       </div>
@@ -141,15 +143,13 @@ export default function TableFilters({
           />
         )}
 
-        {/* Create Button */}
-
         {/* Column Visibility Button */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-          <Button
-                  variant="outline"
-                  className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
-                >
+            <Button
+              variant="outline"
+              className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
+            >
               Visibility <ChevronDown className="ml-1 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -160,10 +160,8 @@ export default function TableFilters({
               <DropdownMenuItem
                 key={column.id}
                 className="flex items-center gap-2"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  column.toggleVisibility();
-                }}
+                onClick={(e) => e.stopPropagation()} // Prevent default behavior
+                onSelect={() => column.toggleVisibility()}
               >
                 <Checkbox checked={column.getIsVisible()} />
                 <span className="capitalize">{column.id}</span>
@@ -171,7 +169,6 @@ export default function TableFilters({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        
       </div>
     </div>
   );
