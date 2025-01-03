@@ -54,73 +54,75 @@ export default function TableFilters({
 
           return (
             <DropdownMenu key={field}>
-              <DropdownMenuTrigger asChild>
-                <Button
+  <DropdownMenuTrigger asChild>
+  <Button
                   variant="outline"
-                  className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-900"
+                  className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
                 >
-                  {formatHeader(field)}
-                  {selectedValues.length > 0 && (
-                    <span className="ml-1 truncate max-w-xs text-muted-foreground">
-                      : {selectedValues.join(", ")}
-                    </span>
-                  )}
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
-                <DropdownMenuLabel>{formatHeader(field)}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <div className="p-2 w-full">
-                    <Input
-                      placeholder={`Search ${formatHeader(field)}...`}
-                      value={searchText}
-                      onChange={(e) =>
-                        handleSearchDropdown(field, e.target.value)
-                      }
-                    />
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {displayedValues.length === 0 ? (
-                  <DropdownMenuItem>
-                    No {formatHeader(field)} found
-                  </DropdownMenuItem>
-                ) : (
-                  displayedValues.map((val) => {
-                    const isChecked = selectedValues.includes(val);
-                    const count = calculateFilterCounts(field, val);
-                    return (
-                      <DropdownMenuItem
-                        key={val}
-                        className="flex items-center gap-2 justify-between"
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          handleToggleValue(field, val, !isChecked);
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Checkbox checked={isChecked} />
-                          <span>{val}</span>
-                        </div>
-                        <span className="text-muted-foreground">{count}</span>
-                      </DropdownMenuItem>
-                    );
-                  })
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-red-500"
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleToggleValue(field, null, false, true);
-                  }}
-                >
-                  Clear filters
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+      {formatHeader(field)}
+      {selectedValues.length > 0 && (
+        <span className="ml-1 truncate max-w-xs text-muted-foreground text-xs">
+          : {selectedValues.join(", ")}
+        </span>
+      )}
+      <ChevronDown className="ml-1 h-3 w-3" />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="start" className="w-48 p-2 text-sm">
+    <DropdownMenuLabel className="text-xs font-semibold">
+      {formatHeader(field)}
+    </DropdownMenuLabel>
+    <DropdownMenuSeparator className="my-1" />
+    <DropdownMenuItem asChild>
+      <div className="p-2 w-full">
+        <Input
+          placeholder={`Search ${formatHeader(field)}...`}
+          value={searchText}
+          onChange={(e) => handleSearchDropdown(field, e.target.value)}
+          className="text-sm"
+        />
+      </div>
+    </DropdownMenuItem>
+    <DropdownMenuSeparator className="my-1" />
+    {displayedValues.length === 0 ? (
+      <DropdownMenuItem className="text-xs text-gray-500">
+        No {formatHeader(field)} found
+      </DropdownMenuItem>
+    ) : (
+      displayedValues.map((val) => {
+        const isChecked = selectedValues.includes(val);
+        const count = calculateFilterCounts(field, val);
+        return (
+          <DropdownMenuItem
+            key={val}
+            className="flex items-center gap-2 justify-between text-sm"
+            onSelect={(e) => {
+              e.preventDefault();
+              handleToggleValue(field, val, !isChecked);
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <Checkbox checked={isChecked} />
+              <span>{val}</span>
+            </div>
+            <span className="text-gray-500 text-xs">{count}</span>
+          </DropdownMenuItem>
+        );
+      })
+    )}
+    <DropdownMenuSeparator className="my-1" />
+    <DropdownMenuItem
+      className="text-red-500 text-xs flex justify-center items-center"
+      onSelect={(e) => {
+        e.preventDefault();
+        handleToggleValue(field, null, false, true);
+      }}
+    >
+      Clear
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+
           );
         })}
       </div>
@@ -144,7 +146,10 @@ export default function TableFilters({
         {/* Column Visibility Button */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
+          <Button
+                  variant="outline"
+                  className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
+                >
               Visibility <ChevronDown className="ml-1 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
