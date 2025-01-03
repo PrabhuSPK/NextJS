@@ -24,12 +24,13 @@ export default function TablePagination({
   paginationLinks,
   handleNavigate,
   fetchData,
+  selectedRowCount,
 }) {
   return (
     <div className="flex items-center justify-between py-4 border-t mt-4">
       {/* Row Selection Info */}
       <div className="text-sm text-muted-foreground">
-        0 of {data.length} row(s) selected.
+      {selectedRowCount} of {data.length} row(s) selected.
       </div>
 
       {/* Rows Per Page Dropdown and Pagination Controls */}

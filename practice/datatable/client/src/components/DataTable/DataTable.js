@@ -316,6 +316,7 @@ export default function DataTable({ apiUrl }) {
         paginationLinks={paginationLinks}
         handleNavigate={(url) => fetchData(url)}
         fetchData={fetchData}
+        selectedRowCount={selectedRowCount}
       />
     </div>
   );
