@@ -70,28 +70,33 @@ export default function TableFilters({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-64 p-2 text-sm max-h-60 overflow-y-auto" // Fixed box size
+                className="w-48 p-2 text-sm" // Fixed box size
                 onClick={(e) => e.stopPropagation()} // Prevent dropdown close
               >
-                <DropdownMenuLabel className="text-xs font-semibold flex justify-between items-center">
+                <DropdownMenuLabel className="text-xs font-semibold">
                   {formatHeader(field)}
-                  {searchText && (
-                    <X
-                      className="h-4 w-4 text-red-500 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent dropdown close
-                        handleSearchDropdown(field, "");
-                      }}
-                    />
-                  )}
                 </DropdownMenuLabel>
-                <Input
-                  placeholder={`Search ${formatHeader(field)}...`}
-                  value={searchText}
-                  className="mt-2 mb-2"
-                  onChange={(e) => handleSearchDropdown(field, e.target.value)}
-                  onClick={(e) => e.stopPropagation()} // Prevent dropdown close
-                />
+
+                {/* Input Wrapper with Clear Icon */}
+                <div className="relative mt-2 mb-2">
+                  <Input
+                    placeholder={`Search`}
+                    value={searchText}
+                    className="pr-8 text-sm" // Add padding for the icon
+                    onChange={(e) => handleSearchDropdown(field, e.target.value)}
+                    onClick={(e) => e.stopPropagation()} // Prevent dropdown close
+                  />
+                  {searchText && (
+                   <X
+                   className="absolute right-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-red-500 cursor-pointer"
+                   onClick={(e) => {
+                     e.stopPropagation(); // Prevent dropdown close
+                     handleSearchDropdown(field, "");
+                   }}
+                 />
+                  )}
+                </div>
+
                 <DropdownMenuSeparator className="my-1" />
                 {displayedValues.length === 0 ? (
                   <div className="text-xs text-gray-500 px-2">
@@ -129,33 +134,32 @@ export default function TableFilters({
         })}
       </div>
 
-        {/* Column Visibility Button */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
+      {/* Column Visibility Button */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
+          >
+            Visibility <ChevronDown className="ml-1 h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Toggle Column Visibility</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {table.getAllColumns().map((column) => (
+            <DropdownMenuItem
+              key={column.id}
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()} // Prevent default behavior
+              onSelect={() => column.toggleVisibility()}
             >
-              Visibility <ChevronDown className="ml-1 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Toggle Column Visibility</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {table.getAllColumns().map((column) => (
-              <DropdownMenuItem
-                key={column.id}
-                className="flex items-center gap-2"
-                onClick={(e) => e.stopPropagation()} // Prevent default behavior
-                onSelect={() => column.toggleVisibility()}
-              >
-                <Checkbox checked={column.getIsVisible()} />
-                <span className="capitalize">{column.id}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+              <Checkbox checked={column.getIsVisible()} />
+              <span className="capitalize">{column.id}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
