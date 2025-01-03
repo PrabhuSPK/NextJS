@@ -141,7 +141,7 @@ export default function TableFilters({
             variant="outline"
             className="flex items-center px-4 py-2 rounded-md border-dashed border-2 border-black-400"
           >
-            Visibility <ChevronDown className="ml-1 h-4 w-4" />
+            View <ChevronDown className="ml-1 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">

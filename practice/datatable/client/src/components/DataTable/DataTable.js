@@ -20,6 +20,7 @@ import ColumnVisibilityManager from "./ColumnVisibilityManager";
 import TableFilters from "./TableFilters";
 import TablePagination from "./TablePagination";
 import DeleteDialog from "@/components/CRUD/Delete";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // Converts snake_case or camelCase to Title Case
 function formatHeader(header) {
@@ -269,44 +270,106 @@ export default function DataTable({ apiUrl }) {
         selectedRowCount={selectedRowCount}
       />
 
-<div className="overflow-x-auto">
-  <table className="min-w-full border-collapse shadow-lg rounded-lg border border-gray-300">
-    <thead>
-      {table.getHeaderGroups().map((headerGroup) => (
-        <tr key={headerGroup.id} className="bg-gray-100">
-          {headerGroup.headers.map((header) => (
-            <th
-              key={header.id}
-              className="px-4 py-2 text-left border-b-2 border-gray-300"
-            >
-              {header.isPlaceholder
-                ? null
-                : flexRender(header.column.columnDef.header, header.getContext())}
-            </th>
-          ))}
-        </tr>
-      ))}
-    </thead>
-    <tbody>
-      {table.getRowModel().rows.map((row) => (
-        <tr
-          key={row.id}
-          className="cursor-pointer hover:bg-gray-50 shadow-sm transition duration-200 ease-in-out"
-          onClick={() => router.push(`/details-user?id=${row.original.id}`)}
-        >
-          {row.getVisibleCells().map((cell) => (
-            <td
-              key={cell.id}
-              className="px-4 py-2 border-b border-gray-200"
-            >
-              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </td>
-          ))}
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+<div className="w-full">
+      {/* <div className="flex items-center justify-between mb-4">
+        <Button onClick={() => router.push("/create-user")}>Create</Button>
+      </div> */}
+      <Table className="border border-gray-200 rounded-lg overflow-hidden">
+  <TableHeader className="bg-gray-50">
+    {table.getHeaderGroups().map((headerGroup) => (
+      <TableRow key={headerGroup.id}>
+        {headerGroup.headers.map((header) => (
+          <TableHead
+            key={header.id}
+            className="px-4 py-3 text-sm font-medium text-left border-b border-gray-200"
+          >
+            {header.isPlaceholder ? null : (
+              <div className="flex items-center space-x-2">
+                <span>
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </span>
+                {header.column.getCanSort() && (
+                  <button
+                    onClick={header.column.getToggleSortingHandler()}
+                    className="flex items-center space-x-2 focus:outline-none"
+                    type="button"
+                  >
+                    {header.column.getIsSorted() === "asc" && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5.293 9.293a1 1 0 011.414 0L10 12.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                    {header.column.getIsSorted() === "desc" && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M14.707 10.707a1 1 0 00-1.414 0L10 14.586l-3.293-3.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l4-4a1 1 0 000-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                    {header.column.getIsSorted() === false && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5.293 7.707a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414zM14.707 12.293a1 1 0 00-1.414 0L10 15.172l-3.293-2.879a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l4-4a1 1 0 000-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+          </TableHead>
+        ))}
+      </TableRow>
+    ))}
+  </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                onClick={() => router.push(`/details-user?id=${row.original.id}`)}
+                className="hover:bg-gray-50 cursor-pointer"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="text-center">
+                No data available
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
 
 
       <TablePagination
