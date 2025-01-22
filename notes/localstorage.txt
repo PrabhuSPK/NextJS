@@ -1,0 +1,57 @@
+cookie
+local storage
+session 
+indexed db
+cache
+
+local storage => 
+light/dark mode
+amazon cart
+some website login details
+session => browser closed or internet disconnected
+
+session-tab
+local-always
+
+html5
+cookies-4mb browser+server
+web storage api(local storage)- 5mb browser(pc spec)
+
+
+
+###################
+origin -unique
+http://localhost:3000
+https://localhost:3000
+https://localhost:3001
+
+protocol://domain:port
+protocol2://domain:80
+http://prabhu.com:80 =>unique
+local storage
+name:prabhu
+https://prabhu.com:80 =>unique
+name:test
+https://prabhu.com:81 =>unique
+https
+
+window.localStorage
+
+CRUD
+
+Create=>
+localStorage.setItem("key","value")
+localStorage.setItem("name","prabhu")
+Read=>
+localStorage.getItem("key")
+Update=>
+localStorage.setItem("name","prabhu2")
+Delete=>
+localStorage.removeItem("name")
+localStorage.clear()
+
+localStorage.setItem("name",{age:"23"})  =object=>automcatically converted to string
+String({})
+localStorage.setItem("name",JSON.stringify({age:"23"}))
+localStorage.getItem("name") =>stored as string
+JSON.parse(localStorage.getItem("name")) =>print as object

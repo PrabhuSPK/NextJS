@@ -3,6 +3,7 @@
 import React from "react"
 // import DynamicShadcnTable from "@/components/DynamicShadcnTable"
 import DynamicShadcnTable from "@/components/DataTable";
+import apiEndpoints from "@/config/apiConfig";
 
 export default function AdminDashboard() {
   return (
@@ -12,7 +13,7 @@ export default function AdminDashboard() {
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-3">Users</h2>
         <DynamicShadcnTable
-          apiUrl="http://127.0.0.1:8000/api/user/"
+          apiUrl={apiEndpoints.users}
           searchableField="id"
         />
       </section>

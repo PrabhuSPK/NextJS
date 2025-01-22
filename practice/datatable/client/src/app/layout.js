@@ -1,5 +1,4 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 
 // Import Toast Provider
 import ToastProvider from "@/components/Providers/Toast";
